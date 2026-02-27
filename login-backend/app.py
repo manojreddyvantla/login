@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import mysql.connector
-import bcrypt
+import random
 
 app = Flask(__name__)
 CORS(app)
@@ -16,43 +16,58 @@ db = mysql.connector.connect(
 
 cursor = db.cursor()
 
-# REGISTER
+# Temporary OTP storage
+otp_storage = {}
+
+# REGISTER (No password stored)
 @app.route("/register", methods=["POST"])
 def register():
     data = request.get_json()
     email = data["email"]
     username = data["username"]
-    password = data["password"]
-
-    # Hash password
-    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
     try:
-        query = "INSERT INTO users (email, username, password) VALUES (%s, %s, %s)"
-        cursor.execute(query, (email, username, hashed_password))
+        query = "INSERT INTO users (email, username) VALUES (%s, %s)"
+        cursor.execute(query, (email, username))
         db.commit()
         return jsonify({"message": "Registration Successful ✅"})
-    except Exception as e:
+    except:
         return jsonify({"message": "Email already exists ❌"})
 
-# LOGIN
-@app.route("/login", methods=["POST"])
-def login():
+
+# SEND OTP
+@app.route("/send-otp", methods=["POST"])
+def send_otp():
     data = request.get_json()
     email = data["email"]
-    password = data["password"]
 
-    query = "SELECT password FROM users WHERE email=%s"
+    query = "SELECT * FROM users WHERE email=%s"
     cursor.execute(query, (email,))
     user = cursor.fetchone()
 
-    if user:
-        stored_password = user[0]
+    if not user:
+        return jsonify({"message": "User not registered ❌"})
 
-        if bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8')):
-            return jsonify({"message": "Login Successful 🎉"})
+    otp = str(random.randint(100000, 999999))
+    otp_storage[email] = otp
+
+    print("OTP for", email, "is:", otp)  # For testing (check terminal)
+
+    return jsonify({"message": "OTP Sent ✅"})
+
+
+# VERIFY OTP (Login)
+@app.route("/verify-otp", methods=["POST"])
+def verify_otp():
+    data = request.get_json()
+    email = data["email"]
+    user_otp = data["otp"]
+
+    if email in otp_storage and otp_storage[email] == user_otp:
+        del otp_storage[email]
+        return jsonify({"message": "Login Successful 🎉"})
     
-    return jsonify({"message": "Invalid Credentials ❌"})
+    return jsonify({"message": "Invalid OTP ❌"})
 
 
 if __name__ == "__main__":
