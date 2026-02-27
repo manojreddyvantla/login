@@ -1,6 +1,7 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import mysql.connector
+import bcrypt
 
 app = Flask(__name__)
 CORS(app)
@@ -23,13 +24,16 @@ def register():
     username = data["username"]
     password = data["password"]
 
+    # Hash password
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
     try:
         query = "INSERT INTO users (email, username, password) VALUES (%s, %s, %s)"
-        cursor.execute(query, (email, username, password))
+        cursor.execute(query, (email, username, hashed_password))
         db.commit()
-        return "Registration Successful ✅"
-    except:
-        return "Email already exists ❌"
+        return jsonify({"message": "Registration Successful ✅"})
+    except Exception as e:
+        return jsonify({"message": "Email already exists ❌"})
 
 # LOGIN
 @app.route("/login", methods=["POST"])
@@ -38,14 +42,18 @@ def login():
     email = data["email"]
     password = data["password"]
 
-    query = "SELECT * FROM users WHERE email=%s AND password=%s"
-    cursor.execute(query, (email, password))
+    query = "SELECT password FROM users WHERE email=%s"
+    cursor.execute(query, (email,))
     user = cursor.fetchone()
 
     if user:
-        return "Login Successful 🎉"
-    else:
-        return "Invalid Credentials ❌"
+        stored_password = user[0]
+
+        if bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8')):
+            return jsonify({"message": "Login Successful 🎉"})
+    
+    return jsonify({"message": "Invalid Credentials ❌"})
+
 
 if __name__ == "__main__":
     app.run(debug=True)
