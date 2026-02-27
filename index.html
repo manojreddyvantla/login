@@ -156,7 +156,7 @@
             const email = this.querySelector('input[type="email"]').value;
             const password = this.querySelector('input[type="password"]').value;
 
-            fetch("http://192.168.1.5:5000/login"), {
+            fetch("http://localhost:5000/login"), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password })
