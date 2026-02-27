@@ -1,20 +1,28 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-import mysql.connector
+import psycopg2
+import os
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 CORS(app)
 
-# MySQL connection
-db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="r00t1234",
-    database="login_systemss"
-)
+# ================= DATABASE CONNECTION =================
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
-cursor = db.cursor()
+conn = psycopg2.connect(DATABASE_URL)
+cursor = conn.cursor()
+
+# Create table if not exists
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    username TEXT NOT NULL,
+    password TEXT NOT NULL
+)
+""")
+conn.commit()
 
 # ================= REGISTER =================
 @app.route("/register", methods=["POST"])
@@ -25,15 +33,16 @@ def register():
     username = data["username"]
     password = data["password"]
 
-    # 🔐 Hash the password before storing
     hashed_password = generate_password_hash(password)
 
     try:
-        query = "INSERT INTO users (email, username, password) VALUES (%s, %s, %s)"
-        cursor.execute(query, (email, username, hashed_password))
-        db.commit()
+        cursor.execute(
+            "INSERT INTO users (email, username, password) VALUES (%s, %s, %s)",
+            (email, username, hashed_password)
+        )
+        conn.commit()
         return "Registration Successful ✅"
-    except Exception as e:
+    except:
         return "Email already exists ❌"
 
 # ================= LOGIN =================
@@ -44,22 +53,17 @@ def login():
     email = data["email"]
     password = data["password"]
 
-    # Get user by email
-    query = "SELECT password FROM users WHERE email=%s"
-    cursor.execute(query, (email,))
+    cursor.execute("SELECT password FROM users WHERE email=%s", (email,))
     user = cursor.fetchone()
 
     if user:
-        stored_password = user[0]
-
-        # 🔐 Check hashed password
-        if check_password_hash(stored_password, password):
+        if check_password_hash(user[0], password):
             return "Login Successful 🎉"
         else:
             return "Invalid Credentials ❌"
     else:
         return "Invalid Credentials ❌"
 
-
+# ================= RUN =================
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000)
