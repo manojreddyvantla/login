@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Register</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            padding: 40px;
+            border-radius: 20px;
+            width: 350px;
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
+            color: #fff;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 10px;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: #fff;
+            color: #764ba2;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #f1f1f1;
+            transform: scale(1.05);
+        }
+
+        .toggle {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .toggle a {
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .toggle a:hover {
+            text-decoration: underline;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- LOGIN FORM -->
+        <div id="loginForm">
+            <h2>Login 🔐</h2>
+            <form id="loginFormData">
+                <input type="email" placeholder="Enter Email" required>
+                <input type="password" placeholder="Enter Password" required>
+                <button type="submit">Login</button>
+            </form>
+            <div class="toggle">
+                Don't have an account?
+                <a onclick="showRegister()">Register</a>
+            </div>
+        </div>
+
+        <!-- REGISTER FORM -->
+        <div id="registerForm" class="hidden">
+            <h2>Register 📝</h2>
+            <form id="registerFormData">
+                <input type="email" placeholder="Enter Email" required>
+                <input type="text" placeholder="Enter Username" required>
+                <input type="password" placeholder="Enter Password" required>
+                <button type="submit">Register</button>
+            </form>
+            <div class="toggle">
+                Already have an account?
+                <a onclick="showLogin()">Login</a>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+
+        function showRegister() {
+            document.getElementById("loginForm").classList.add("hidden");
+            document.getElementById("registerForm").classList.remove("hidden");
+        }
+
+        function showLogin() {
+            document.getElementById("registerForm").classList.add("hidden");
+            document.getElementById("loginForm").classList.remove("hidden");
+        }
+
+        // Register
+        document.getElementById("registerFormData").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const email = this.querySelector('input[type="email"]').value;
+            const username = this.querySelector('input[type="text"]').value;
+            const password = this.querySelector('input[type="password"]').value;
+
+            fetch("http://localhost:5000/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, username, password })
+            })
+                .then(res => res.text())
+                .then(data => alert(data));
+        });
+
+        // Login
+        document.getElementById("loginFormData").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const email = this.querySelector('input[type="email"]').value;
+            const password = this.querySelector('input[type="password"]').value;
+
+            fetch("http://localhost:5000/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            })
+                .then(res => res.text())
+                .then(data => alert(data));
+        });
+
+    </script>
+
+</body>
+
+</html>
