@@ -140,7 +140,7 @@
             const username = this.querySelector('input[type="text"]').value;
             const password = this.querySelector('input[type="password"]').value;
 
-            fetch("http://localhost:5000/register", {
+            fetch("https://login-t4o4.onrender.com/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, username, password })
@@ -156,7 +156,7 @@
             const email = this.querySelector('input[type="email"]').value;
             const password = this.querySelector('input[type="password"]').value;
 
-            fetch("http://localhost:5000/login", {
+            fetch("https://login-t4o4.onrender.com/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password })
